@@ -1,18 +1,7 @@
-html,body
-{
-	height: 100%;
-	width: 99%;
-}
-#map { position: relative; width: 100%; height: 600; }
+/*#map { position: relative; width: 100%; height: 600; }*/
 
 /*#map_canvas { position: absolute; left: 0; top: 0; bottom: 0; right: 251px; }*/
-#mapi { position: absolute; left: 0; top: 0; bottom: 0; right: 251px; }
-#sidebar { position: absolute; top: 0; bottom: 0; right: 0; width: 250px; border: 0px solid; }
-#map_canvas { width:100%; height:500px; }
-#placeholder { width:100%; height:200px; }
-#iinfo {border: 1px solid; }
-#info {border: 0px solid; font-size:10px; }
-#status { font-size:10px; }
-
-#link { font-size:10px; }
-#downl { font-size:10px; }
+/*#mapi { position: absolute; left: 0; top: 0; bottom: 0; right: 251px; }*/
+/*#sidebar { position: absolute; top: 0; bottom: 0; right: 0; width: 250px; border: 0px solid; }*/
+#map_canvas { width:100%; height:400px; }
+/*#placeholder { width:100%; height:200px; }*/

@@ -25,6 +25,7 @@
 */
 
 require_once("buddy_func.php");
+require_once("group.php");
 
 function draw_profile($userid) {
 	$data = get_userdata($userid);
@@ -34,8 +35,7 @@ function draw_profile($userid) {
 //    $fbuid=$fb->get_loggedin_user();
 
     /* Start */
-	$o = "<tr>\n<td class=\"user_infobox\">";
-    $o .= "<div class=\"container\">";
+    $o .= "<div class=\"user_infobox\">";
 
     /* Legg til bilde */ 
 	if( isset($data->bilde) )
@@ -45,7 +45,6 @@ function draw_profile($userid) {
         //var_dump($data->fbuid);
 //        $test = $fb->api_client->fql_query('SELECT uid, pic_square, first_name FROM user WHERE uid = ' . $data->fbuid);
         //var_dump($test);
-        $bilde = $test;
         $bilde = get_avatar($userid, 50, "", "bilde"); /* Bare midlertidig, til vi får facebook-bilder opp å gå */
     }
     else{
@@ -82,35 +81,34 @@ function draw_profile($userid) {
     $o .= "<br/>";    
  
 	if( isset($data->stud_ret) ) {
-        $o .= "Studieretning: ".$data->stud_ret."<br/>";
+        $o .= "Studerer ".$data->stud_ret;
     }
     if( isset($data->stud_ar) ) {
-        $o .= "Studie&aring;r: ".$data->stud_ar."<br/>";
+        $o .= " på ".$data->stud_ar.". året<br/>";
     }
     /*if( isset($data->description) && $data->description != "" ) {
         $o .= "Annet: ".$data->description;
     }*/
 
     $o .= "</div>"; 
-    $o .= "</div>"; 
     /* Avslutt og returner */
-	$o .= "</td>";
+    $o .= "</div>"; 
 	return $o;
 }
 function draw_group_infobox($groupnr) {
 	ob_start();
 	
 ?>
-	<td class="group_infobox" rowspan="<?= num_buddys($groupnr); ?>">
-	<span class="groupname" >Gruppe <?= $groupnr; ?></span><span class="score"><?php count_group_score($groupnr); ?><img src="http://folk.uio.no/mariusno/trophy.png"/></span>
-	<div class="activityfeed">
-		<span class="feedtitle">Feed:</span><br />
-		<?= draw_activity_feed($groupnr); ?>
+	<div class="group_infobox">
+		<span class="groupname" ><?= "<a href=\"../gruppe/?n=$groupnr\">";?>Gruppe <?= $groupnr; ?></a></span><span class="score"><?php count_group_score($groupnr); ?><img src="http://folk.uio.no/mariusno/trophy.png"/></span>
+		<div class="activityfeed">
+			<span class="feedtitle">Feed:</span><br />
+			<?= draw_activity_feed($groupnr); ?>
+		</div>
+		<div class="footer">
+			<span class="connected">Tilkoblede fadderbarn: <?= "<a href=\"../gruppe/?n=$groupnr\">".num_kids($groupnr)."</a></span>"; ?> <img src="http://folk.uio.no/nikolark/bilder/add_user.png" title="Connect to group with facebook." />
+		</div>
 	</div>
-	<div class="footer">
-		<span class="connected">Tilkoblede fadderbarn: <?= "<a href=\"./group/$groupnr/kids/\">".num_kids($groupnr)."</a></span>"; ?> <img src="http://folk.uio.no/nikolark/bilder/add_user.png" title="Connect to group with facebook." />
-	</div>
-	</td>
 <?php
 	$data = ob_get_contents();
 	ob_end_clean();
@@ -125,13 +123,11 @@ function draw_profiles($settings) {
 	$last_gid = 1;
 	ob_start();
 
-	//$users = $wpdb->get_results("SELECT user_id,meta_value FROM $wpdb->users JOIN $wpdb->usermeta ON {$wpdb->users}.ID = {$wpdb->usermeta}.user_id WHERE meta_key LIKE 'faddergroup' ORDER BY meta_value,user_login ASC");
-
 	$NUM_BUDDY_GROUPS = 15;
 	for($i=1; $i <= $NUM_BUDDY_GROUPS; $i++) {
 		$buddys = get_buddys($i);
 		if(count($buddys) > 0) {
-			echo "<table>";
+			echo '<div class="group_list">';
 		}
 		$first_in_group = true;
 		foreach ($buddys as $buddy) {
@@ -140,17 +136,14 @@ function draw_profiles($settings) {
 				echo draw_group_infobox($i);
 				$first_in_group = false;
 			}
-			echo "</tr>\n";
 		}
 		if(count($buddys) > 0) {
-			echo "</table>";
+			echo "</div>";
 		}
 	}
 	$data = ob_get_contents();
 	ob_end_clean();
 	return $data;
-	//add_custom_usermetafields();
-	//var_dump($settings);
 }
 function add_stylesheet() {
 ?>
@@ -164,6 +157,14 @@ function add_stylesheet() {
 			padding: 2px;
 		}
 		
+		.group_list {
+			display: table;
+			width: 100%;
+			margin: 4px;
+			padding: 4px;
+			border: solid 2px;
+			border-color: #dddddd;
+		}
 		.group_infobox {
 			float:right;
 		}
@@ -184,6 +185,8 @@ function add_stylesheet() {
 			display:inline-block;
 			vertical-align:bottom;
 		}
+		.group_infobox span.groupname {
+		}
 
 		div.user_info {
 			font-size:0.8em;
@@ -193,6 +196,38 @@ function add_stylesheet() {
 		div.avatar {
 			float:left;
 		}
+		div.buddy_list {
+			float:left;
+			width:30%;
+		}
+		div.kids_list {
+			width:50%;
+			float:right;
+		}
+		div.group_wrapper {
+			width:100%;
+		}
+		.group_info {
+			/*float:left;*/
+		}
+		.group_info span.score {
+			float:right;
+			font-weight:bold;
+			font-size:1.2em;
+			color:#cf2020;
+		}
+		.group_info div.activityfeed {
+			font-size:0.8em;
+		}
+		.group_info div.footer {
+			display:inline-block;
+			veritcal-algin:bottom;
+		}
+		.group_info span.connected {
+			display:inline-block;
+			vertical-align:bottom;
+		}
+
 	</style>
 
 <?php
@@ -201,6 +236,9 @@ add_action('admin_footer','add_bacon');
 add_action('wp_head','add_stylesheet');
 
 add_shortcode('profiles','draw_profiles');
+add_shortcode('get_map_info','get_map_info');
+
+add_shortcode('kart','draw_maps');
 
 /*** OPTIONS in the user pages ***/
 
@@ -254,7 +292,7 @@ function my_show_extra_profile_fields( $user ) { ?>
 
 
         
-<?php if ( current_user_can('manage_options') ){
+<?php if ( current_user_can('manage_options') || time() < gmmktime(0, 0, 0, 8, 14, 2010) ){
 
 $is_f = get_user_meta( $user->ID, 'isFadder', true);
 //var_dump($is_f);
@@ -265,8 +303,11 @@ print '
             <th><label for="isFadder">Er fadder?</label></th>
 
             <td>
-                <input type="text" name="isFadder" id="isFadder" value="'.$is_f.'" class="regular-text" /><br />
-                <span class="description">1 hvis ja, 0 hvis nei</span>
+                <input type="hidden" name="isFadder" id="isFadder" value="0" class="regular-text" />';
+		if ($is_f == 1) print '<input type="checkbox" name="isFadder" value="1" checked>';
+		else print '<input type="checkbox" name="isFadder" value="1">';
+print '		<br/>
+                <span class="description">Velg denne hvis du er fadder</span>
             </td>
         </tr>
         
@@ -307,7 +348,32 @@ print '
             </td>
         </tr>
 
-</tr>
+	<tr>
+            <th><label for="fad_lat">Lat</label></th>
+            <td>
+                <input type="text" name="fad_lat" id="fad_lat" value="<?php echo esc_attr( get_the_author_meta( 'fad_lat', $user->ID ) ); ?>" class="regular-text" /><br />
+                <span class="description">Latitude</span>
+            </td>
+        </tr>
+
+
+	<tr>
+            <th><label for="fad_lon">lon</label></th>
+            <td>
+                <input type="text" name="fad_lon" id="fad_lon" value="<?php echo esc_attr( get_the_author_meta( 'fad_lon', $user->id ) ); ?>" class="regular-text" /><br />
+                <span class="description">lontitude</span>
+            </td>
+        </tr>
+
+	<tr>
+            <th><label for="fad_geotime">Geo time</label></th>
+            <td>
+                <input type="text" name="fad_geotime" id="fad_geotime" value="<?php echo esc_attr( get_the_author_meta( 'fad_geotime', $user->id ) ); ?>" class="regular-text" /><br />
+                <span class="description">Time for geo</span>
+            </td>
+        </tr>
+
+
 
     </table>
 
@@ -330,8 +396,13 @@ function my_save_extra_profile_fields( $user_id ) {
     update_usermeta( $user_id, 'lastfm_url', $_POST['lastfm_url'] );
     
  
-    if ( current_user_can('manage_options') ){
-        update_usermeta( $user_id, 'isFadder', $_POST['isFadder'] );
+    if ( current_user_can('manage_options') || time() < gmmktime(0, 0, 0, 8, 14, 2010)){
+    	/* Geodata */
+	update_usermeta( $user_id, 'fad_lat', $_POST['fad_lat'] );
+    	update_usermeta( $user_id, 'fad_lon', $_POST['fad_lon'] );
+    	update_usermeta( $user_id, 'fad_geotime', $_POST['fad_geotime'] );
+ 	/* is fadder */
+  	update_usermeta( $user_id, 'isFadder', $_POST['isFadder'] );
     }
 }
 
@@ -347,6 +418,31 @@ function my_plugin_options() {
    include("buddy-admin.php" );
 }
     
+function draw_maps(){
+	print '<script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAArmJmbq77m8lzUfEaPb2ZvhRH0MZJ1dk1u0j8Vy0StsBioyX4SBRDkuc0WPtU5ftZOtCDjxUJ7nZPbw"   type="text/javascript"></script>
+<script src="../wp-content/plugins/buddy_profile/functions.js" type="text/javascript"></script>
+<link href="../wp-content/plugins/buddy_profile/style.css" rel="stylesheet" type="text/css"></link>
 
+
+<script  type="text/javascript">
+	$(function() { initialize(); });
+
+</script>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+
+<div id="map">
+	<div id="mapi">
+		<div id="map_canvas"></div>
+    		<div id="placeholder"></div>
+	</div>
+</div>
+';
+
+}
+
+function get_map_info(){
+die("fikk kart");
+}
 
 ?>

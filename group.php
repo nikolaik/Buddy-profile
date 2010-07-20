@@ -1,34 +1,50 @@
 <?php
-function group_page() {
-	if(isset($_GET['group']) && is_numeric($_GET['group']) {
-		draw_group($_GET['group']);
+function buddy_group_page($options) {
+	ob_start();
+	if(isset($_GET['n']) && is_numeric($_GET['n'])) {
+		echo draw_group($_GET['n']);
 	}
 	else { 
-		echo "invalid group";
-
+		echo "Invalid group.";
 	}
+	$data = ob_get_contents();
+	ob_end_clean();
+	return $data;
 }
 
-function draw_groups($group) {
-	$groups = get_groups();
-	foreach($groups as $group) {
+function draw_group($group) {
+	$buddys = get_buddys($group);
+	$kids = get_kids($group);
 	ob_start();
 ?>
-	<td class="group_infobox" rowspan="<?= num_buddys($groupnr); ?>">
-	<span class="groupname" >Gruppe <?= $groupnr; ?></span><span class="score"><?php count_group_score($groupnr); ?><img src="http://folk.uio.no/mariusno/trophy.png"/></span>
-	<div class="activityfeed">
-		<span class="feedtitle">Feed:</span><br />
-		<?= draw_activity_feed($groupnr); ?>
+	<div class="group_wrapper">
+		<div class="group_info">
+			<?=  draw_group_infobox($group); ?>
+		</div>
+		<br />
+		<div class="buddy_list">
+			<h3>Faddere</h3>
+			<?php
+			foreach ($buddys as $buddy) {
+				echo draw_small_profile($buddy->user_id);
+				echo "</tr>\n";
+			}
+			?>
+		</div>
+		<div class="kids_list">
+			<h3>Barn</h3>
+			<?php
+			foreach ($kids as $kid) {
+				echo draw_small_profile($kid->user_id);
+				echo "</tr>\n";
+			}
+			?>
+		</div>
 	</div>
-	<div class="footer">
-		<span class="connected">Tilkoblede fadderbarn: <?= "<a href=\"./group/$groupnr/kids/\">".num_kids($groupnr)."</a></span>"; ?> <img src="http://folk.uio.no/nikolark/bilder/add_user.png" title="Connect to group with facebook." />
-	</div>
-	</td>
 <?php
 	$data = ob_get_contents();
 	ob_end_clean();
 	return $data;
-	}
 }
-add_shortcode('group','group_page');
+add_shortcode('buddy_group','buddy_group_page');
 ?>

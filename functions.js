@@ -5,11 +5,12 @@ function initialize() {
         if (GBrowserIsCompatible()) {
 
                 map = new GMap2(document.getElementById("map_canvas"));
-                map.setCenter(new GLatLng(60.90, 10.65), 6);
+                map.setCenter(new GLatLng(59.94257,10.718014), 15);
                 map.setUIToDefault();
                 map.enableScrollWheelZoom();
+		map.setMapType(G_SATELLITE_MAP);
 
-		loadpoints(0);
+			loadpoints(0);
 
         }
         else alert ("Browser not supported");
@@ -23,15 +24,34 @@ function loadpoints(id){
 }
 
 function jsonhandle(data){
+
         for(i in data){
-		alert("hei");
-		console.debug(i);
-		var point = new GLatLng(data[i].lat, data[i].lon);
-        	var marker = null;
 
-        	marker = new GMarker(point, markerOptions);
-		map.addOverlay(marker);
+		create_marker(data[i]);
+       }
+}
 
-        }
+function create_marker(info){
+		var p = null;
+		p = new Point(1, info.lat, info.lon, info.navn, info.beskrivelse);
+		p.point = new GLatLng(p.lat, p.lon);
+
+        	p.marker  = new GMarker(p.point);
+		GEvent.addListener(p.marker, "click", function() {  
+			p.marker.openInfoWindow(p.text);  
+		});
+
+		map.addOverlay(p.marker);
+ 
+}
+
+function Point(id, lat, lon, text){
+        this.id = id;
+        this.lat = lat;
+        this.lon = lon;
+	this.text = text;
+	this.beskrivelse;
+	this.marker = null;
+	this.point = null;
 }
 

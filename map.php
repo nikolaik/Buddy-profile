@@ -16,5 +16,6 @@ if ($_GET["type"] == "poi") {
 }
  
 mysql_close($connection);
+//var_dump($json);
 die(json_encode($json));
 ?>
