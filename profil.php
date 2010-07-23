@@ -55,6 +55,8 @@ function draw_profile($userid) {
 	/* Legg til navn. */
 	$o .= $data->first_name." (".$data->user_login.")<br />";
 
+	/*TODO: Add edit-link if the user is logged in and the profile belongs to the logged in user. */
+
     /* Legg til info om brukeren */       
     $o .= "<div class=\"user_info\">";
     
@@ -77,6 +79,12 @@ function draw_profile($userid) {
 		$o .= "<a href=\"".$data->user_url."\"><img src=\"http://folk.uio.no/nikolark/bilder/wordpress_16.png\"></a>";
 	}
 
+	/* Legg til geolocation */
+	if( isset($data->fad_geotime) ) {
+		$o .= "<a href=\"http://cyb.ifi.uio.no/fadderuke/kart/?type=persons&highlight=".$userid."\"><img src=\"http://folk.uio.no/mariusno/globe-europe.jpg\" height=\"17\"></a>";
+	}
+	
+
 
     $o .= "<br/>";    
  
@@ -94,6 +102,21 @@ function draw_profile($userid) {
     /* Avslutt og returner */
     $o .= "</div>"; 
 	return $o;
+}
+function get_study_program($groupnr) {
+	global $wpdb;
+
+    $group = $wpdb->get_results("SELECT * FROM fad_gruppe WHERE id=$groupnr LIMIT 1");
+	return $group[0]->navn;
+}
+function draw_study_program($study_program) {
+	ob_start();
+
+	echo '<div class"program_name">'.$study_program.'</div>';
+	
+	$data = ob_get_contents();
+	ob_end_clean();
+	return $data;
 }
 function draw_group_infobox($groupnr) {
 	ob_start();
@@ -121,24 +144,37 @@ function draw_profiles($settings) {
 	global $wpdb;
 
 	$last_gid = 1;
+	$last_gname = "";
 	ob_start();
 
-	$NUM_BUDDY_GROUPS = 15;
+	$NUM_BUDDY_GROUPS = 16;
 	for($i=1; $i <= $NUM_BUDDY_GROUPS; $i++) {
 		$buddys = get_buddys($i);
+		$program_name = get_study_program($i);
+		if($program_name != $current) {
+			echo draw_study_program($program_name);
+			$current = $program_name;
+		}
 		if(count($buddys) > 0) {
 			echo '<div class="group_list">';
 		}
 		$first_in_group = true;
 		foreach ($buddys as $buddy) {
-			echo draw_profile($buddy->user_id);
 			if($first_in_group) {
+				echo draw_profile($buddy->user_id);
 				echo draw_group_infobox($i);
 				$first_in_group = false;
+			}
+			else {
+				echo draw_profile($buddy->user_id);
 			}
 		}
 		if(count($buddys) > 0) {
 			echo "</div>";
+		}
+		if(get_study_program($i) != $current) {
+			echo draw_study_program($program_name);
+			$current = $program_name;
 		}
 	}
 	$data = ob_get_contents();
@@ -159,7 +195,7 @@ function add_stylesheet() {
 		
 		.group_list {
 			display: table;
-			width: 100%;
+			width: 98%;
 			margin: 4px;
 			padding: 4px;
 			border: solid 2px;
@@ -227,6 +263,9 @@ function add_stylesheet() {
 			display:inline-block;
 			vertical-align:bottom;
 		}
+		div.program_name {
+			font-weight:bold;
+		}
 
 	</style>
 
@@ -252,7 +291,7 @@ function my_show_extra_profile_fields( $user ) { ?>
     <table class="form-table">
 
         <tr>
-            <th><label for="faddergroup">Faddergruppe</label></th>
+            <th><label for="faddergroup"><span style="font-weight:bold;">Faddergruppe</span> <span style="color:red;" >*</span></label></th>
 
             <td>
 
@@ -262,7 +301,40 @@ function my_show_extra_profile_fields( $user ) { ?>
         </tr>
 
 
-        <tr>
+
+      
+<?php 
+/* Funksjon for å vise "er fadder" boksen, skal etter planen bli borte 14.8.2010 */
+if ( current_user_can('manage_options') || time() < gmmktime(0, 0, 0, 8, 14, 2010) ){
+
+	$is_f = get_user_meta( $user->ID, 'isFadder', true);
+	//var_dump($is_f);
+	//var_dump($user->ID);
+
+print '
+         <tr>
+            <th><label for="isFadder"><span style="font-weight:bold;">Er du fadder?</span> <span style="color:red;" >*</span></label></th>
+
+            <td>
+                <input type="hidden" name="isFadder" id="isFadder" value="0" class="regular-text" />';
+		if ($is_f == 1) print '<input type="checkbox" name="isFadder" value="1" checked>';
+		else print '<input type="checkbox" name="isFadder" value="1">';
+print '		<br/>
+                <span class="description">Velg denne hvis du er fadder</span>
+            </td>
+        </tr>
+        
+';
+}
+?>
+
+
+	</table>
+    	<h3>Annen info</h3>
+
+   <table class="form-table">
+
+	<tr>
             <th><label for="bilde">Bilde</label></th>
 
             <td>
@@ -290,30 +362,6 @@ function my_show_extra_profile_fields( $user ) { ?>
 
 
 
-
-        
-<?php if ( current_user_can('manage_options') || time() < gmmktime(0, 0, 0, 8, 14, 2010) ){
-
-$is_f = get_user_meta( $user->ID, 'isFadder', true);
-//var_dump($is_f);
-//var_dump($user->ID);
-
-print '
-         <tr>
-            <th><label for="isFadder">Er fadder?</label></th>
-
-            <td>
-                <input type="hidden" name="isFadder" id="isFadder" value="0" class="regular-text" />';
-		if ($is_f == 1) print '<input type="checkbox" name="isFadder" value="1" checked>';
-		else print '<input type="checkbox" name="isFadder" value="1">';
-print '		<br/>
-                <span class="description">Velg denne hvis du er fadder</span>
-            </td>
-        </tr>
-        
-';
-}
-?>
 
 
     </table>
@@ -425,7 +473,7 @@ function draw_maps(){
 
 
 <script  type="text/javascript">
-	$(function() { initialize(); });
+	$(function() { initialize("'.$_GET['type'].'","'.$_GET['highlight'].'"); });
 
 </script>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
@@ -437,7 +485,15 @@ function draw_maps(){
     		<div id="placeholder"></div>
 	</div>
 </div>
+
+
 ';
+
+/* Legg til geolocation */
+if( isset($data->fad_geotime) ) {
+		$o .= "<a href=\"http://cyb.ifi.uio.no/fadderuke/kart/?type=persons&highlight=".$userid."\"><img src=\"http://folk.uio.no/mariusno/globe-europe.jpg\" height=\"17\"></a>";
+	}
+	
 
 }
 

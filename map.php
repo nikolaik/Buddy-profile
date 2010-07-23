@@ -14,6 +14,15 @@ if ($_GET["type"] == "poi") {
 	array_push($json, $row);
 	}
 }
+
+if ($_GET["type"] == "persons") {
+	$res = mysql_query("select * from (SELECT `user_id`,`meta_value` as lat FROM `fad_usermeta` WHERE `meta_key` like 'fad_lat' ) as elat  NATURAL JOIN (SELECT `user_id`,`meta_value` as lon FROM `fad_usermeta` WHERE `meta_key` like 'fad_lon' ) as elon NATURAL JOIN (SELECT `user_id`,`meta_value` as time FROM `fad_usermeta` WHERE `meta_key` like 'fad_geotime' ) as etime") or die(mysql_error());
+	while($row = mysql_fetch_array($res))
+	{
+	array_push($json, $row);
+	}
+
+}
  
 mysql_close($connection);
 //var_dump($json);

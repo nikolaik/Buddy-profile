@@ -110,8 +110,8 @@ function fadder_in_group($group){
     $return = "";
     $first = 1;
     foreach($res as $fadder) {
-        if ($first != 1) $return.=", ";
         if (get_user_meta($fadder->user_id,'isFadder',true) == 1){
+            if ($first != 1) $return.=", ";
             $return.=$fadder->user_login;
             $first = 0;
         }
