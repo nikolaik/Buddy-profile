@@ -93,8 +93,12 @@ function make_dropdown_group($id, $user){
         $faddere = fadder_in_group($group);
         if ($group->id == $chosen_gr) $tillegg = "selected";
         else $tillegg ="";
+	$faddere_sep = split(",", $faddere);
+	/*om gruppa er full, disable */
+	if ( count($faddere_sep) >= $group->antall) $dis = "disabled";
+	else $dis ="";
 	if ($fadder == 1 || time() < gmmktime(0, 0, 0, 8, 14, 2010) ) $info = "Plasser: ". $group->antall." Fadderbarn: ".$group->ant_barn;
-        print '<option '.$tillegg.' value="'.$group->id.'">Gruppe: '.$group->id.' ('.$faddere.') '.$info.'</option>';
+        print '<option '.$tillegg.' value="'.$group->id.'"'.$dis.'>Gruppe: '.$group->id.' ('.$faddere.') '.$info.'</option>';
 //        echo var_dump($group);
     }
     print '</optgroup>';
@@ -134,14 +138,9 @@ function fadder_in_group($group){
 
 
 function count_group_score($group){
-    global $wpdb;
-     $res = $wpdb->get_results("SELECT sum(score) as point FROM fad_gruppe_konk NATURAL JOIN fad_konk WHERE g_id = {$group}");
-    foreach($res as $score) { 
-        echo $score->point;
-        return $score->point;
-
-    }
-   return 150;
+	global $wpdb;
+	$res = $wpdb->get_results("SELECT sum(score) as point FROM fad_gruppe_konk NATURAL JOIN fad_konk WHERE g_id = {$group}");
+	return $res[0]->point;
 }
 
 function make_dropdown_badge(){
@@ -199,7 +198,7 @@ function draw_small_profile($userid) {
 	ob_start();
 
     /* Start */
-	echo '<div class="user_infobox">';
+	echo '<div class="user_smallinfobox">';
 
     /* Legg til bilde */ 
 	if( isset($data->bilde) ) {
@@ -211,13 +210,33 @@ function draw_small_profile($userid) {
     echo '<div class="avatar">'.$bilde.'</div>';
 
 	/* Legg til navn. */
-	echo $data->first_name.' ('.$data->user_login.')<br />';
+	echo $data->first_name.' ('.$data->nickname.')<br />';
 
     /* Avslutt og returner */
 	echo "</div>";
 	$data = ob_get_contents();
 	ob_end_clean();
 	return $data;
+}
+
+function get_bilde($userid){
+	$data = get_userdata($userid);
+	if( isset($data->bilde) ) {
+        	$bilde = '<img src="'.get_user_meta($userid,'bilde',true).'" width=50px \>';
+	}
+	else {
+        	$bilde = get_avatar($userid, 50, "", "bilde");
+	}
+	return $bilde;
+ }
+function get_activities($groupnr) {
+	global $wpdb;
+
+	/* TODO: - Sort by time
+	 *	- Get new users in group */
+    $activities[] = $wpdb->get_results("SELECT * FROM fad_gruppe_konk WHERE g_id='$groupnr'");
+    $activities[] = $wpdb->get_results("SELECT * FROM fad_gruppe WHERE id='$groupnr'");
+	return $activities;
 }
 
 ?>

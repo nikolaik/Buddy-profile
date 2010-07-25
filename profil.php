@@ -28,80 +28,78 @@ require_once("buddy_func.php");
 require_once("group.php");
 
 function draw_profile($userid) {
+	global $current_user;
+
+	ob_start();
 	$data = get_userdata($userid);
 
-//    include_once '../simple-facebook-connect/facebook-platform/facebook.php';
-  //  $fb=new Facebook($options['api_key'], $options['app_secret']);
-//    $fbuid=$fb->get_loggedin_user();
-
     /* Start */
-    $o .= "<div class=\"user_infobox\">";
+    echo '<div class="user_infobox">';
 
     /* Legg til bilde */ 
-	if( isset($data->bilde) )
+	if( isset($data->bilde) ) {
         $bilde = "<img src=\"".get_user_meta($userid,'bilde',true)."\" width=50px \>";
-    
-    else if ($data->fbuid){
-        //var_dump($data->fbuid);
-//        $test = $fb->api_client->fql_query('SELECT uid, pic_square, first_name FROM user WHERE uid = ' . $data->fbuid);
-        //var_dump($test);
-        $bilde = get_avatar($userid, 50, "", "bilde"); /* Bare midlertidig, til vi får facebook-bilder opp å gå */
-    }
-    else{
+	} 
+    else {
         $bilde = get_avatar($userid, 50, "", "bilde");
     }
-    $o .= "<div class=\"avatar\">".$bilde."</div>";
-
-	/* Legg til navn. */
-	$o .= $data->first_name." (".$data->user_login.")<br />";
-
-	/*TODO: Add edit-link if the user is logged in and the profile belongs to the logged in user. */
+    echo '<div class="avatar">'.$bilde.'</div>';
 
     /* Legg til info om brukeren */       
-    $o .= "<div class=\"user_info\">";
+    echo '<div class="user_info">';
     
+	/* Legg til navn. */
+	/*$o .= $data->first_name." (".$data->nickname.")<br />";*/
+	echo '<span class="user_name">'.$data->first_name.'</span>';
+
+	if(is_user_logged_in() && ($userid == $current_user->ID)) {
+		echo ' - <a href="'.get_bloginfo('url').'/wp-admin/profile.php">Edit</a>';
+	}
+	echo '<br />';
+
 	/* Legg til Facebook */
  	if( isset($data->facebook_url) ) {
-		$o .= "<a href=\"".$data->facebook_url."\"><img src=\"http://folk.uio.no/nikolark/bilder/facebook_16.png\"></a>";
+		echo '<a href="'.$data->facebook_url.'"><img src="http://folk.uio.no/nikolark/bilder/facebook_16.png"></a>';
 	}
 
     /* Legg til Twitter */
 	if( isset($data->twitter) ) {
-		$o .= "<a href=\"http://twitter.com/".$data->twitter."\"><img src=\"http://folk.uio.no/nikolark/bilder/twitter_16.png\"></a>";# - last tweet";
+		echo '<a href="http://twitter.com/'.$data->twitter.'"><img src="http://folk.uio.no/nikolark/bilder/twitter_16.png"></a>';
+		/*TODO: Last tweet */
 	}
-    /* Legg til Twitter */
+    /* Legg til Last.FM */
 	if( isset($data->lastfm_url) ) {
-		$o .= "<a href=\"http://www.last.fm/user/".$data->lastfm_url."\"><img src=\"http://folk.uio.no/nikolark/bilder/lastfm_16.png\"></a>";
+		echo '<a href="http://www.last.fm/user/'.$data->lastfm_url.'"><img src="http://folk.uio.no/nikolark/bilder/lastfm_16.png"></a>';
 	}
 	
 	/* Legg til egen hjemmeside */
  	if( isset($data->user_url) && $data->user_url != "") {
-		$o .= "<a href=\"".$data->user_url."\"><img src=\"http://folk.uio.no/nikolark/bilder/wordpress_16.png\"></a>";
+		echo '<a href="'.$data->user_url.'"><img src="http://folk.uio.no/nikolark/bilder/wordpress_16.png"></a>';
 	}
 
 	/* Legg til geolocation */
 	if( isset($data->fad_geotime) ) {
-		$o .= "<a href=\"http://cyb.ifi.uio.no/fadderuke/kart/?type=persons&highlight=".$userid."\"><img src=\"http://folk.uio.no/mariusno/globe-europe.jpg\" height=\"17\"></a>";
+		echo '<a href="http://cyb.ifi.uio.no/fadderuke/kart/?type=persons&highlight='.$userid.'"><img src="http://folk.uio.no/mariusno/globe-europe.jpg" height="17"></a>';
 	}
 	
-
-
-    $o .= "<br/>";    
+	echo '<br />';
  
 	if( isset($data->stud_ret) ) {
-        $o .= "Studerer ".$data->stud_ret;
+        echo '<span class="studie">Studerer '.$data->stud_ret;
     }
-    if( isset($data->stud_ar) ) {
-        $o .= " på ".$data->stud_ar.". året<br/>";
+	if( !(isset($data->stud_ar)) ) {
+		echo '</span>';
+	}
+    if( isset($data->stud_ret) && isset($data->stud_ar) ) {
+        echo ' på '.$data->stud_ar.'. året</span><br />';
     }
-    /*if( isset($data->description) && $data->description != "" ) {
-        $o .= "Annet: ".$data->description;
-    }*/
 
-    $o .= "</div>"; 
     /* Avslutt og returner */
-    $o .= "</div>"; 
-	return $o;
+    echo "</div>\n</div>"; 
+
+	$data = ob_get_contents();
+	ob_end_clean();
+	return $data;
 }
 function get_study_program($groupnr) {
 	global $wpdb;
@@ -112,8 +110,21 @@ function get_study_program($groupnr) {
 function draw_study_program($study_program) {
 	ob_start();
 
-	echo '<div class"program_name">'.$study_program.'</div>';
+	echo '<h4>'.$study_program.'</h4>';
 	
+	$data = ob_get_contents();
+	ob_end_clean();
+	return $data;
+}
+function draw_group_name($groupnr) {
+	ob_start();
+
+	?>
+		<div class="group_name" >
+			<?= "<a href=\"../gruppe/?n=$groupnr\">";?><?= $groupnr; ?></a>
+		</div>
+	<?php
+
 	$data = ob_get_contents();
 	ob_end_clean();
 	return $data;
@@ -123,7 +134,27 @@ function draw_group_infobox($groupnr) {
 	
 ?>
 	<div class="group_infobox">
-		<span class="groupname" ><?= "<a href=\"../gruppe/?n=$groupnr\">";?>Gruppe <?= $groupnr; ?></a></span><span class="score"><?php count_group_score($groupnr); ?><img src="http://folk.uio.no/mariusno/trophy.png"/></span>
+		<?= draw_group_name($groupnr); ?>
+		<span class="score" title="Poengsum i IFI-Olympiaden"><?= count_group_score($groupnr); ?><img src="http://folk.uio.no/mariusno/trophy.png"/></span>
+		<div class="activityfeed">
+			<span class="feedtitle">Feed:</span><br />
+			<?= draw_activity_feed($groupnr); ?>
+		</div>
+		<div class="footer">
+			<span class="connected">Tilkoblede fadderbarn: <?= "<a href=\"../gruppe/?n=$groupnr\">".num_kids($groupnr)."</a></span>"; ?> <img src="http://folk.uio.no/nikolark/bilder/add_user.png" title="Connect to group with facebook." />
+		</div>
+	</div>
+<?php
+	$data = ob_get_contents();
+	ob_end_clean();
+	return $data;
+}
+function draw_group_info($groupnr) {
+	ob_start();
+	
+?>
+	<div class="group_info">
+		<span class="groupname" ><?= "<a href=\"../gruppe/?n=$groupnr\">";?>Gruppe <?= $groupnr; ?></a></span><span class="score"><?= count_group_score($groupnr); ?><img src="http://folk.uio.no/mariusno/trophy.png"/></span>
 		<div class="activityfeed">
 			<span class="feedtitle">Feed:</span><br />
 			<?= draw_activity_feed($groupnr); ?>
@@ -138,13 +169,23 @@ function draw_group_infobox($groupnr) {
 	return $data;
 }
 function draw_activity_feed($groupnr) {
-	return ;
+	ob_start();
+	$activities = get_activities($groupnr);
+	foreach( $activities as $activity ) {
+		echo '<div class="activity_item">';
+		echo($activity);
+		// f.ex: '<name> join the group', 'Scored <num> points from a <contest-link>', 'Got the <award-name> award!'
+		echo '</div>';
+	}
+
+	$data = ob_get_contents();
+	ob_end_clean();
+	return $data;
 }
 function draw_profiles($settings) {
 	global $wpdb;
 
-	$last_gid = 1;
-	$last_gname = "";
+	$current = "";
 	ob_start();
 
 	$NUM_BUDDY_GROUPS = 16;
@@ -161,16 +202,14 @@ function draw_profiles($settings) {
 		$first_in_group = true;
 		foreach ($buddys as $buddy) {
 			if($first_in_group) {
-				echo draw_profile($buddy->user_id);
 				echo draw_group_infobox($i);
+				echo '<div class="group_list_buddys">';
 				$first_in_group = false;
 			}
-			else {
-				echo draw_profile($buddy->user_id);
-			}
+			echo draw_profile($buddy->user_id);
 		}
 		if(count($buddys) > 0) {
-			echo "</div>";
+			echo "</div>\n</div>";
 		}
 		if(get_study_program($i) != $current) {
 			echo draw_study_program($program_name);
@@ -185,14 +224,31 @@ function add_stylesheet() {
 ?>
 	<style type="text/css">
 		.user_infobox {
-			float:left;
-			width:52%;
 			padding:0px;
+			margin:0px;
+			height:60px;
 		}
 		.user_infobox img {
 			padding: 2px;
 		}
-		
+		.user_smallinfobox {
+			float:left;
+			padding:0px;
+		}
+		.user_smallinfobox img {
+			padding: 2px;
+		}
+		div.avatar {
+			float:left;
+			height:50px;
+		}
+		div.user_info {
+		}
+		.user_info span.user_name {
+		}
+		.user_info span.studie {
+			font-size:0.8em;
+		}
 		.group_list {
 			display: table;
 			width: 98%;
@@ -201,7 +257,35 @@ function add_stylesheet() {
 			border: solid 2px;
 			border-color: #dddddd;
 		}
+		.group_list_buddys {
+			width:55%;
+			padding:0px;
+		}
+		div.group_name {
+			display:table-cell;
+			float:left;
+			width:50px;
+			height:60px;
+			text-align:center;
+			vertical-align:middle;
+			font-size:2.5em;
+			margin-right:4px;
+			margin-left:4px;
+			padding:0px;
+		}
+		div.group_name a {
+			text-decoration:none;
+			margin:0px;
+			padding-left:5px;
+			padding-right:5px;
+		}
+		div.group_name a:hover {
+			background-color:#pink;
+		}
+
+		/* Profiles page */
 		.group_infobox {
+			width:43%;
 			float:right;
 		}
 		.group_infobox span.score {
@@ -214,6 +298,8 @@ function add_stylesheet() {
 			font-size:0.8em;
 		}
 		.group_infobox div.footer {
+			float:right;
+			padding-top:40px;
 			display:inline-block;
 			veritcal-algin:bottom;
 		}
@@ -223,15 +309,40 @@ function add_stylesheet() {
 		}
 		.group_infobox span.groupname {
 		}
-
-		div.user_info {
-			font-size:0.8em;
+		.group_infobox img {
 			display:inline-block;
-			vertical-align:top;
+			vertical-align: middle;
 		}
-		div.avatar {
-			float:left;
+
+		/* Group page */
+		.group_info {
+			width:50%;
+			/*float:left;*/
 		}
+		.group_info span.score {
+			float:right;
+			font-weight:bold;
+			font-size:1.2em;
+			color:#cf2020;
+		}
+		.group_info div.activityfeed {
+			font-size:0.8em;
+		}
+		.group_info div.footer {
+			display:inline-block;
+			veritcal-algin:bottom;
+		}
+		.group_info span.connected {
+			display:inline-block;
+			vertical-align:bottom;
+		}
+		.group_info span.groupname {
+		}
+		.group_info img {
+			display:inline-block;
+			vertical-align: middle;
+		}
+
 		div.buddy_list {
 			float:left;
 			width:30%;
@@ -262,9 +373,6 @@ function add_stylesheet() {
 		.group_info span.connected {
 			display:inline-block;
 			vertical-align:bottom;
-		}
-		div.program_name {
-			font-weight:bold;
 		}
 
 	</style>
@@ -395,6 +503,15 @@ print '		<br/>
                 <span class="description">Last.fm brukernavn</span>
             </td>
         </tr>
+ 
+        <tr>
+            <th><label for="lastfm_url">IRC</label></th>
+            <td>
+                <input type="text" name="irc" id="irc" value="<?php echo esc_attr( get_the_author_meta( 'irc', $user->ID ) ); ?>" class="regular-text" /><br />
+                <span class="description">#kanal@server, #kanal2@server</span>
+            </td>
+        </tr>
+
 
 	<tr>
             <th><label for="fad_lat">Lat</label></th>
@@ -431,8 +548,9 @@ add_action( 'personal_options_update', 'my_save_extra_profile_fields' );
 add_action( 'edit_user_profile_update', 'my_save_extra_profile_fields' );
 function my_save_extra_profile_fields( $user_id ) {
 
-    if ( !current_user_can( 'edit_user', $user_id ) )
+    if ( !current_user_can( 'edit_user', $user_id ) ) {
         return false;
+	}
 
     /* Copy and paste this line for additional fields. Make sure to change 'twitter' to the field ID. */
     update_usermeta( $user_id, 'twitter', $_POST['twitter'] );
@@ -442,15 +560,17 @@ function my_save_extra_profile_fields( $user_id ) {
     update_usermeta( $user_id, 'stud_ar', $_POST['stud_ar'] );
     update_usermeta( $user_id, 'facebook_url', $_POST['facebook_url'] );
     update_usermeta( $user_id, 'lastfm_url', $_POST['lastfm_url'] );
+    update_usermeta( $user_id, 'irc', $_POST['irc'] );
     
  
     if ( current_user_can('manage_options') || time() < gmmktime(0, 0, 0, 8, 14, 2010)){
     	/* Geodata */
-	update_usermeta( $user_id, 'fad_lat', $_POST['fad_lat'] );
+		update_usermeta( $user_id, 'fad_lat', $_POST['fad_lat'] );
     	update_usermeta( $user_id, 'fad_lon', $_POST['fad_lon'] );
     	update_usermeta( $user_id, 'fad_geotime', $_POST['fad_geotime'] );
- 	/* is fadder */
-  	update_usermeta( $user_id, 'isFadder', $_POST['isFadder'] );
+
+		/* is fadder */
+		update_usermeta( $user_id, 'isFadder', $_POST['isFadder'] );
     }
 }
 
@@ -486,8 +606,20 @@ function draw_maps(){
 	</div>
 </div>
 
-
 ';
+
+if ($_GET['type'] != "persons") return;
+
+global $wpdb;
+$res = $wpdb->get_results("SELECT * from fad_users");
+    foreach($res as $person) { 
+	$per = get_userdata($person->ID);
+	if (!isset($per->fad_geotime)) continue;
+	$text = "<img src=\'".get_user_meta($per->ID,'bilde',true)."\' width=50px \>".$per->first_name." (".$per->nickname.")<br/>".$per->fad_geotime;
+	$jcode = "<a href=\"javascript:persons[".$per->ID."].marker.openInfoWindow('".$text."');\">";
+	echo $jcode.$per->nickname.'</a><br/>';
+
+    }
 
 /* Legg til geolocation */
 if( isset($data->fad_geotime) ) {

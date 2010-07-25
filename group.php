@@ -18,9 +18,7 @@ function draw_group($group) {
 	ob_start();
 ?>
 	<div class="group_wrapper">
-		<div class="group_info">
-			<?=  draw_group_infobox($group); ?>
-		</div>
+		<?=  draw_group_info($group); ?>
 		<br />
 		<div class="buddy_list">
 			<h3>Faddere</h3>
