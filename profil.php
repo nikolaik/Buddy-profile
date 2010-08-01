@@ -34,79 +34,83 @@ function draw_profile($userid) {
 	$data = get_userdata($userid);
 
     /* Start */
-    echo '<div class="user_infobox">';
+    echo '<li class="user_infobox">';
+	echo '<div class="user_info clearfix">';
 
     /* Legg til bilde */ 
 	if( isset($data->bilde) ) {
-        $bilde = "<img src=\"".get_user_meta($userid,'bilde',true)."\" width=50px \>";
+        $bilde = '<img src="' . get_user_meta($userid, "bilde", true) . '" width="50px" \>';
 	} 
     else {
         $bilde = get_avatar($userid, 50, "", "bilde");
     }
-    echo '<div class="avatar">'.$bilde.'</div>';
+    echo $bilde;
 
-    /* Legg til info om brukeren */       
-    echo '<div class="user_info">';
+    /* Legg til info om brukeren */
+	echo '<div class="inner">';
     
 	/* Legg til navn. */
 	/*$o .= $data->first_name." (".$data->nickname.")<br />";*/
-	echo '<span class="user_name">'.$data->first_name.'</span>';
+	echo '<h5 class="user_name">'.$data->first_name.' ('.$data->nickname.')';
 
 	if(is_user_logged_in() && ($userid == $current_user->ID)) {
-		echo ' - <a href="'.get_bloginfo('url').'/wp-admin/profile.php">Edit</a>';
+		echo ' <span class="color_red"><a href="'.get_bloginfo('url').'/wp-admin/profile.php">(edit)</a></span>';
 	}
-	echo '<br />';
+	echo "</h5>";
 
+	echo '<ul class="horizontal clearfix">';
 	/* Legg til Facebook */
  	if( isset($data->facebook_url) ) {
-		echo '<a href="'.$data->facebook_url.'"><img src="http://folk.uio.no/nikolark/bilder/facebook_16.png"></a>';
+		echo '<li><a href="'.$data->facebook_url.'"><img src="http://folk.uio.no/nikolark/bilder/facebook_16.png"></a></li>';
 	}
 
     /* Legg til Twitter */
 	if( isset($data->twitter) ) {
-		echo '<a href="http://twitter.com/'.$data->twitter.'"><img src="http://folk.uio.no/nikolark/bilder/twitter_16.png"></a>';
+		echo '<li><a href="http://twitter.com/'.$data->twitter.'"><img src="http://folk.uio.no/nikolark/bilder/twitter_16.png"></a></li>';
 		/*TODO: Last tweet */
 	}
     /* Legg til Last.FM */
 	if( isset($data->lastfm_url) ) {
-		echo '<a href="http://www.last.fm/user/'.$data->lastfm_url.'"><img src="http://folk.uio.no/nikolark/bilder/lastfm_16.png"></a>';
+		echo '<li><a href="http://www.last.fm/user/'.$data->lastfm_url.'"><img src="http://folk.uio.no/nikolark/bilder/lastfm_16.png"></a></li>';
 	}
 	
 	/* Legg til egen hjemmeside */
  	if( isset($data->user_url) && $data->user_url != "") {
-		echo '<a href="'.$data->user_url.'"><img src="http://folk.uio.no/nikolark/bilder/wordpress_16.png"></a>';
+		echo '<li><a href="'.$data->user_url.'"><img src="http://folk.uio.no/nikolark/bilder/wordpress_16.png"></a></li>';
 	}
 
 	/* Legg til geolocation */
 	if( isset($data->fad_geotime) ) {
-		echo '<a href="http://cyb.ifi.uio.no/fadderuke/kart/?type=persons&highlight='.$userid.'"><img src="http://folk.uio.no/mariusno/globe-europe.jpg" height="17"></a>';
+		echo '<li><a href="http://cyb.ifi.uio.no/fadderuke/kart/?type=persons&highlight='.$userid.'"><img src="http://folk.uio.no/mariusno/globe-europe.jpg" height="17"></a></li>';
 	}
-	
-	echo '<br />';
+	echo '</ul>';
  
+	echo '<div class="studie">';
 	if( isset($data->stud_ret) ) {
-        echo '<span class="studie">Studerer '.$data->stud_ret;
+        echo 'Studerer '.$data->stud_ret;
     }
-	if( !(isset($data->stud_ar)) ) {
-		echo '</span>';
-	}
     if( isset($data->stud_ret) && isset($data->stud_ar) ) {
-        echo ' på '.$data->stud_ar.'. året</span><br />';
+        echo ' på '.$data->stud_ar.'. året';
     }
+	echo '</div>';
 
     /* Avslutt og returner */
-    echo "</div>\n</div>"; 
+	echo "</div>";
+	echo "</div>";
+	echo "</li>"; 
 
 	$data = ob_get_contents();
 	ob_end_clean();
 	return $data;
 }
+
 function get_study_program($groupnr) {
 	global $wpdb;
 
     $group = $wpdb->get_results("SELECT * FROM fad_gruppe WHERE id=$groupnr LIMIT 1");
 	return $group[0]->navn;
 }
+
 function draw_study_program($study_program) {
 	ob_start();
 
@@ -116,6 +120,7 @@ function draw_study_program($study_program) {
 	ob_end_clean();
 	return $data;
 }
+
 function draw_group_name($groupnr) {
 	ob_start();
 
@@ -129,6 +134,7 @@ function draw_group_name($groupnr) {
 	ob_end_clean();
 	return $data;
 }
+
 function draw_group_infobox($groupnr) {
 	ob_start();
 	
@@ -149,6 +155,7 @@ function draw_group_infobox($groupnr) {
 	ob_end_clean();
 	return $data;
 }
+
 function draw_group_info($groupnr) {
 	ob_start();
 	
@@ -168,6 +175,7 @@ function draw_group_info($groupnr) {
 	ob_end_clean();
 	return $data;
 }
+
 function draw_activity_feed($groupnr) {
 	ob_start();
 	$activities = get_activities($groupnr);
@@ -182,6 +190,7 @@ function draw_activity_feed($groupnr) {
 	ob_end_clean();
 	return $data;
 }
+
 function draw_profiles($settings) {
 	global $wpdb;
 
@@ -196,21 +205,14 @@ function draw_profiles($settings) {
 			echo draw_study_program($program_name);
 			$current = $program_name;
 		}
-		if(count($buddys) > 0) {
-			echo '<div class="group_list">';
-		}
-		$first_in_group = true;
+		echo '<div class="group_list clearfix">';
+		echo '<ul class="group_list_buddys">';
 		foreach ($buddys as $buddy) {
-			if($first_in_group) {
-				echo draw_group_infobox($i);
-				echo '<div class="group_list_buddys">';
-				$first_in_group = false;
-			}
 			echo draw_profile($buddy->user_id);
 		}
-		if(count($buddys) > 0) {
-			echo "</div>\n</div>";
-		}
+		echo "</ul>\n";
+		echo draw_group_infobox($i);
+		echo "</div>";
 		if(get_study_program($i) != $current) {
 			echo draw_study_program($program_name);
 			$current = $program_name;
@@ -223,44 +225,19 @@ function draw_profiles($settings) {
 function add_stylesheet() {
 ?>
 	<style type="text/css">
-		.user_infobox {
-			padding:0px;
-			margin:0px;
-			height:60px;
+		.user_infobox {  }
+		.user_info > img { float: left; }
+		.user_info > .inner { margin-left: 50px; padding: 0 0.5em; }
+		.studie { font-size:0.8em; }
+		.group_list { border: solid 2px #dddddd; display: block; margin: 1em 0; }
+		.group_list_buddys { float: left; margin: 0 !important; width: 50%; }
+		.group_list_buddys > li { 
+			border: dotted 1px #ddd;
+			border-width: 1px 1px 0 0;
+			list-style-type: none !important; 
+			width: 100%; 
 		}
-		.user_infobox img {
-			padding: 2px;
-		}
-		.user_smallinfobox {
-			float:left;
-			padding:0px;
-		}
-		.user_smallinfobox img {
-			padding: 2px;
-		}
-		div.avatar {
-			float:left;
-			height:50px;
-		}
-		div.user_info {
-		}
-		.user_info span.user_name {
-		}
-		.user_info span.studie {
-			font-size:0.8em;
-		}
-		.group_list {
-			display: table;
-			width: 98%;
-			margin: 4px;
-			padding: 4px;
-			border: solid 2px;
-			border-color: #dddddd;
-		}
-		.group_list_buddys {
-			width:55%;
-			padding:0px;
-		}
+		.group_list_buddys > li:first-child { border-top: 0; }
 		div.group_name {
 			display:table-cell;
 			float:left;
@@ -268,7 +245,7 @@ function add_stylesheet() {
 			height:60px;
 			text-align:center;
 			vertical-align:middle;
-			font-size:2.5em;
+			font-size:2.0em;
 			margin-right:4px;
 			margin-left:4px;
 			padding:0px;
@@ -285,7 +262,7 @@ function add_stylesheet() {
 
 		/* Profiles page */
 		.group_infobox {
-			width:43%;
+			width:50%;
 			float:right;
 		}
 		.group_infobox span.score {
@@ -301,7 +278,7 @@ function add_stylesheet() {
 			float:right;
 			padding-top:40px;
 			display:inline-block;
-			veritcal-algin:bottom;
+			vertical-align:bottom;
 		}
 		.group_infobox span.connected {
 			display:inline-block;
@@ -374,6 +351,9 @@ function add_stylesheet() {
 			display:inline-block;
 			vertical-align:bottom;
 		}
+		.color_red a{
+			color:red;
+		}
 
 	</style>
 
@@ -386,6 +366,8 @@ add_shortcode('profiles','draw_profiles');
 add_shortcode('get_map_info','get_map_info');
 
 add_shortcode('kart','draw_maps');
+require_once("movmarker.php"); 
+add_shortcode('movemap','move_maps');
 
 /*** OPTIONS in the user pages ***/
 
@@ -404,7 +386,7 @@ function my_show_extra_profile_fields( $user ) { ?>
             <td>
 
                 <?php make_dropdown_group("faddergroup", $user) ?>
-                <span class="description">Vennligst velg gruppe, faddere i parantes</span>
+                <span class="description">Vennligst velg gruppe, faddere i parantes. Om alle grupper er full, bruk buffer gruppa intill videre</span>
             </td>
         </tr>
 
@@ -512,7 +494,6 @@ print '		<br/>
             </td>
         </tr>
 
-
 	<tr>
             <th><label for="fad_lat">Lat</label></th>
             <td>
@@ -534,7 +515,7 @@ print '		<br/>
             <th><label for="fad_geotime">Geo time</label></th>
             <td>
                 <input type="text" name="fad_geotime" id="fad_geotime" value="<?php echo esc_attr( get_the_author_meta( 'fad_geotime', $user->id ) ); ?>" class="regular-text" /><br />
-                <span class="description">Time for geo</span>
+                <span class="description">Time for geo (Tøm dette feltet for å fjerne marker)</span>
             </td>
         </tr>
 
@@ -554,7 +535,7 @@ function my_save_extra_profile_fields( $user_id ) {
 
     /* Copy and paste this line for additional fields. Make sure to change 'twitter' to the field ID. */
     update_usermeta( $user_id, 'twitter', $_POST['twitter'] );
-    update_usermeta( $user_id, 'faddergroup', $_POST['faddergroup'] );
+    if ($_POST['faddergroup'] != "")    update_usermeta( $user_id, 'faddergroup', $_POST['faddergroup'] );
     update_usermeta( $user_id, 'bilde', $_POST['bilde'] );
     update_usermeta( $user_id, 'stud_ret', $_POST['stud_ret'] );
     update_usermeta( $user_id, 'stud_ar', $_POST['stud_ar'] );
@@ -562,15 +543,15 @@ function my_save_extra_profile_fields( $user_id ) {
     update_usermeta( $user_id, 'lastfm_url', $_POST['lastfm_url'] );
     update_usermeta( $user_id, 'irc', $_POST['irc'] );
     
- 
-    if ( current_user_can('manage_options') || time() < gmmktime(0, 0, 0, 8, 14, 2010)){
-    	/* Geodata */
-		update_usermeta( $user_id, 'fad_lat', $_POST['fad_lat'] );
+	/* Geodata */
+	update_usermeta( $user_id, 'fad_lat', $_POST['fad_lat'] );
     	update_usermeta( $user_id, 'fad_lon', $_POST['fad_lon'] );
     	update_usermeta( $user_id, 'fad_geotime', $_POST['fad_geotime'] );
 
-		/* is fadder */
-		update_usermeta( $user_id, 'isFadder', $_POST['isFadder'] );
+
+    if ( current_user_can('manage_options') || time() < gmmktime(0, 0, 0, 8, 14, 2010)){
+    	/* is fadder */
+	update_usermeta( $user_id, 'isFadder', $_POST['isFadder'] );
     }
 }
 
@@ -592,11 +573,7 @@ function draw_maps(){
 <link href="../wp-content/plugins/buddy_profile/style.css" rel="stylesheet" type="text/css"></link>
 
 
-<script  type="text/javascript">
-	$(function() { initialize("'.$_GET['type'].'","'.$_GET['highlight'].'"); });
-
-</script>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
 
 <div id="map">
@@ -608,25 +585,49 @@ function draw_maps(){
 
 ';
 
-if ($_GET['type'] != "persons") return;
+if ($_GET['type'] == "persons"){
 
-global $wpdb;
-$res = $wpdb->get_results("SELECT * from fad_users");
-    foreach($res as $person) { 
-	$per = get_userdata($person->ID);
-	if (!isset($per->fad_geotime)) continue;
-	$text = "<img src=\'".get_user_meta($per->ID,'bilde',true)."\' width=50px \>".$per->first_name." (".$per->nickname.")<br/>".$per->fad_geotime;
-	$jcode = "<a href=\"javascript:persons[".$per->ID."].marker.openInfoWindow('".$text."');\">";
-	echo $jcode.$per->nickname.'</a><br/>';
+	global $wpdb;
+	$res = $wpdb->get_results("SELECT * from fad_users");
+	    foreach($res as $person) { 
+		$per = get_userdata($person->ID);
+		if (!isset($per->fad_geotime) && $per->fad_geotime != "") continue;
+		if (!isset($per->fad_geoacc)) continue;
+		$jcode = "<a href=\"javascript:selectMarker(".$per->ID.");\">";
+		?>
+		<div id="ui<? echo$per->ID?>" style="visibility:hidden; height:0px">
+		<img src="<?php echo get_user_meta($per->ID,'bilde',true)?>" width=50px \><?php echo $per->first_name." (".$per->nickname.")<br/>".$per->fad_geotime;?>
+		</div>
+		<?
+		echo $jcode.$per->nickname.'</a><br/>';
+print '
+<script  type="text/javascript">
+	$(function() { initialize("'.$_GET['type'].'","'.$_GET['highlight'].'"); });
 
-    }
+</script>
+';	
 
-/* Legg til geolocation */
-if( isset($data->fad_geotime) ) {
-		$o .= "<a href=\"http://cyb.ifi.uio.no/fadderuke/kart/?type=persons&highlight=".$userid."\"><img src=\"http://folk.uio.no/mariusno/globe-europe.jpg\" height=\"17\"></a>";
-	}
-	
 
+    	}
+
+
+}
+else{
+	global $wpdb;
+	$res = $wpdb->get_results("SELECT * from fad_poi");
+	    foreach($res as $poi) { 
+//		echo $poi->navn.'<br/>';
+		$jcode = "<a href=\"javascript:poi[".$poi->p_id."].marker.openInfoWindow('".$poi->navn."');\">";
+		echo $jcode.$poi->navn.'</a><br/>';
+print '<script  type="text/javascript">
+	$(function() { initialize("'.$_GET['type'].'","'.$_GET['highlight'].'"); });
+
+</script>';
+'
+
+
+    	}
+}
 }
 
 function get_map_info(){
