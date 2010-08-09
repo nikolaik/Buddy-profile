@@ -82,11 +82,11 @@ function make_dropdown_group($id, $user){
     $return = "";
     $first = 1;
     $current = "";
-    print '<select name="'.$id.'">';
+    echo '<select name="'.$id.'">';
     foreach($groups as $group) {
 	if ($group->navn != $current){
-		if ($first != 1) print '</optgroup>';
-		print ' <optgroup label="'.$group->navn.'"> ';
+		if ($first != 1) echo '</optgroup>';
+		echo ' <optgroup label="'.$group->navn.'"> ';
 		$first = 1;
 		$current = $group->navn;
 	}
@@ -95,18 +95,16 @@ function make_dropdown_group($id, $user){
         else $tillegg ="";
 	$faddere_sep = split(",", $faddere);
 	/*om gruppa er full, disable */
-	if ( count($faddere_sep) >= $group->antall) $dis = "disabled";
+	if ( count($faddere_sep) >= $group->antall && time() < gmmktime(0, 0, 0, 8, 14, 2010)) $dis = "disabled";
+	else if ( count($faddere_sep) >= $group->antall && $fadder == 1) $dis = "disabled";
 	else $dis ="";
 	if ($fadder == 1 || time() < gmmktime(0, 0, 0, 8, 14, 2010) ) $info = "Plasser: ". $group->antall." Fadderbarn: ".$group->ant_barn;
-        print '<option '.$tillegg.' value="'.$group->id.'"'.$dis.'>Gruppe: '.$group->id.' ('.$faddere.') '.$info.'</option>';
+        echo '<option '.$tillegg.' value="'.$group->id.'"'.$dis.'>Gruppe: '.$group->id.' ('.$faddere.') '.$info.'</option>';
 //        echo var_dump($group);
     }
-    print '</optgroup>';
-   print '</select><br/>';
+    echo '</optgroup>';
+   echo '</select><br/>';
 }
-
-
-
 
 function fadder_in_group($group){
     global $wpdb;
@@ -142,83 +140,44 @@ function count_group_score($group){
 	$res = $wpdb->get_results("SELECT sum(score) as point FROM fad_gruppe_konk NATURAL JOIN fad_konk WHERE g_id = {$group}");
 	return $res[0]->point;
 }
-
 function make_dropdown_badge(){
     global $wpdb;
     $badges = $wpdb->get_results("SELECT * FROM fad_badge");
     $return = "";
-    print '<select name="badge">';
+    echo '<select name="badge">';
     foreach($badges as $badge) {
-        print '<option '.$tillegg.' value="'.$badge->b_id.'">'. $badge->b_id.': '.$badge->besk.'</option>';
+        echo '<option '.$tillegg.' value="'.$badge->b_id.'">'. $badge->b_id.': '.$badge->besk.'</option>';
     }
-   print '</select><br/>';
+   echo '</select><br/>';
 }
-
-
-function make_dropdown_konk(){
+function make_dropdown_konk() {
     global $wpdb;
     $badges = $wpdb->get_results("SELECT * FROM fad_konk");
     $return = "";
-    print '<select name="k_id">';
+    echo '<select name="k_id">';
     foreach($badges as $badge) {
-        print '<option '.$tillegg.' value="'.$badge->k_id.'">'. $badge->k_id.': '.$badge->navn.' score: '.$badge->score.'</option>';
+        echo '<option '.$tillegg.' value="'.$badge->k_id.'">'. $badge->k_id.': '.$badge->navn.' score: '.$badge->score.'</option>';
     }
-   print '</select><br/>';
+   echo '</select><br/>';
 }
-
-
-function make_checkbox_group(){
+function make_checkbox_group() {
     global $wpdb;
     $groups = $wpdb->get_results("SELECT * FROM fad_gruppe");
-    $return = "";
-    $i=1;
     foreach($groups as $group) {
         $faddere = fadder_in_group($group);
-        
-    print '<INPUT TYPE=CHECKBOX NAME="box[]" value="'.$group->id.'" />Gruppe '.$group->id.' ('.$faddere.') ';
-    if ($i == 3){
-	$i=1;
-	echo "<br/>";
+    	echo '<INPUT TYPE=CHECKBOX NAME="box[]" value="'.$group->id.'" />Gruppe '.$group->id.' ('.$faddere.') ';
+		echo "<br/>";
     }
-    else $i++;
-    }
-   print '</select><br/>';
+   echo '</select><br/>';
 }
 function get_groups(){
     global $wpdb;
     $groups = $wpdb->get_results("SELECT * FROM fad_gruppe");
 	return $groups;
 }
-
 function show_profile(){
 	
 }
-function draw_small_profile($userid) {
-	$data = get_userdata($userid);
-	ob_start();
-
-    /* Start */
-	echo '<div class="user_smallinfobox">';
-
-    /* Legg til bilde */ 
-	if( isset($data->bilde) ) {
-        $bilde = '<img src="'.get_user_meta($userid,'bilde',true).'" width=50px \>';
-	}
-	else {
-        $bilde = get_avatar($userid, 50, "", "bilde");
-    }
-    echo '<div class="avatar">'.$bilde.'</div>';
-
-	/* Legg til navn. */
-	echo $data->first_name.' ('.$data->nickname.')<br />';
-
-    /* Avslutt og returner */
-	echo "</div>";
-	$data = ob_get_contents();
-	ob_end_clean();
-	return $data;
-}
-
 function get_bilde($userid){
 	$data = get_userdata($userid);
 	if( isset($data->bilde) ) {
@@ -232,11 +191,27 @@ function get_bilde($userid){
 function get_activities($groupnr) {
 	global $wpdb;
 
-	/* TODO: - Sort by time
-	 *	- Get new users in group */
-    $activities[] = $wpdb->get_results("SELECT * FROM fad_gruppe_konk WHERE g_id='$groupnr'");
-    $activities[] = $wpdb->get_results("SELECT * FROM fad_gruppe WHERE id='$groupnr'");
+    $activities = $wpdb->get_results("SELECT * FROM fad_aktivitet WHERE g_id='$groupnr' ORDER BY a_id DESC");
+
 	return $activities;
+}
+function get_badge($bid) {
+	global $wpdb;
+
+    $badge = $wpdb->get_results("SELECT * FROM fad_badge WHERE b_id='$bid' LIMIT 1");
+	return $badge[0];
+}
+function get_contest($kid) {
+	global $wpdb;
+
+    $contest = $wpdb->get_results("SELECT * FROM fad_konk WHERE k_id='$kid' LIMIT 1");
+	return $contest[0];
+}
+function get_study_program($groupnr) {
+	global $wpdb;
+
+    $group = $wpdb->get_results("SELECT * FROM fad_gruppe WHERE id=$groupnr LIMIT 1");
+	return $group[0]->navn;
 }
 
 ?>
